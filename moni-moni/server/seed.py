@@ -9,9 +9,6 @@ dotenv.read_dotenv(".env")
 
 from django_seed import Seed
 from server.apps.catalogue.models import Category, Fundraiser
-from server.apps.checkout.models import FundingOptions, PaymentSelections
-from server.apps.orders.models import Order, OrderItem
-from server.apps.users.models import CustomUser, Address
 
 
 def init_seeders(seeders_list):
@@ -27,16 +24,14 @@ def seed(seeders):
             seeder.add_entity(
                 Fundraiser,
                 {
-                    "category": lambda x: seeder.faker.word(),
-                    "created_by": lambda x: seeder.faker.name(),
                     "title": lambda x: seeder.faker.title(),
                     "author": lambda x: seeder.faker.name(),
                     "description": lambda x: seeder.faker.word(),
                     "image": lambda x: seeder.faker.word(),
                     "slug": lambda x: seeder.faker.word(),
                     "tags": lambda x: seeder.faker.word(),
-                    "fund_total": random.randint(10000000, 3030430405450),
-                    "fund_remaining": random.randint(10000000, 3030430405450),
+                    "total_amount": random.randint(10000000, 3030430405450),
+                    "remaining_amount": random.randint(10000000, 3030430405450),
                     "fund_method": random.randint(10000000, 3030430405450),
                 },
             )

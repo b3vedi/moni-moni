@@ -16,11 +16,11 @@ function MainFeaturedPost({ fundraiser }) {
         position: "relative",
         backgroundColor: "grey.800",
         color: "#fff",
-        mb: 4,
+        m: 4,
         backgroundSize: "cover",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
-        backgroundImage: `url(${fundraiser.image})`,
+        backgroundImage: `url(${fundraiser.image}/)`,
       }}
       onClick={() => navigate(`/fundraisers/${fundraiser.slug}`)}
     >
@@ -28,7 +28,7 @@ function MainFeaturedPost({ fundraiser }) {
         {/* Increase the priority of the hero background image */}
         {
           <img
-            style={{ display: "none" }}
+            style={{ maxWidth: "100vw", display: "none" }}
             src={fundraiser.image}
             alt={fundraiser.imageText}
           />
@@ -61,7 +61,7 @@ function MainFeaturedPost({ fundraiser }) {
                 {fundraiser.title}
               </Typography>
               <Typography variant="h5" color="inherit" paragraph>
-                {fundraiser.description}
+                {fundraiser.description.substring(0, 300)}...
               </Typography>
               <Link variant="subtitle1" href="#">
                 {fundraiser.linkText}

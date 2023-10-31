@@ -64,11 +64,15 @@ class LogoutAPI(generics.GenericAPIView):
         permissions.IsAuthenticated,
     ]
 
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data={"refresh": request.COOKIES.get("x-refresh-token")}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        res = Response(status=status.HTTP_204_NO_CONTENT)
+        res.delete_cookie("x-refresh-token")
+        return res
 
 
 class ActivateAccountView(generics.GenericAPIView):

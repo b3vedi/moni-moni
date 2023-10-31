@@ -11,7 +11,16 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = str(os.getenv("DEBUG", 1)) == "1"  # 1 is True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "moni-moni.herokuapp.com",
+    "frontend-amal-thundiyil.cloud.okteto.net",
+    "backend-amal-thundiyil.cloud.okteto.net",
+]
+
+if DEBUG:
+    ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -26,14 +35,16 @@ INSTALLED_APPS = [
     "django_countries",
     "server.apps.users.apps.UsersConfig",
     "server.apps.catalogue.apps.CatalogueConfig",
-    "server.apps.orders.apps.OrdersConfig",
     "server.apps.checkout.apps.CheckoutConfig",
     "django_seed",
+    "drf_yasg",
+    "whitenoise.runserver_nostatic",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -47,8 +58,8 @@ ROOT_URLCONF = "server.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": False,
+        "DIRS": [os.path.join(BASE_DIR, "build")],
+        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -104,10 +115,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
+    "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
@@ -142,21 +153,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.CustomUser"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
-CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:3000",
-    "http://localhost:3000",
-    "http://localhost",
-    "http://127.0.0.1",
-]
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = str(os.getenv("CORS_ALLOW_CREDENTIALS", 1)) == "1"  # 1 is True
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+CSRF_TRUSTED_ORIGINS = ['http://*', "https://*"]
+
+
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "/static/"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# STATICFILES_DIRS = [
+#     # Tell Django where to look for React's static files (css, js)
+#     os.path.join(BASE_DIR, "build/static"),
+# ]
 
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 EMAIL_USE_TLS = str(os.getenv("EMAIL_USE_TLS", 1)) == "1"
 EMAIL_PORT = os.getenv("EMAIL_PORT", 587)

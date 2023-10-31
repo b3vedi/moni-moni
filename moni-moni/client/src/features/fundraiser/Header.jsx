@@ -10,55 +10,64 @@ import Box from "@mui/material/Box";
 import ProgressBar from "../../components/ProgressBar";
 
 function Header({ fundraiser }) {
-  console.log(fundraiser);
   return (
-    <Grid item xs={12} md={6}>
-      <Card sx={{ display: "flex" }}>
-        <CardMedia
-          component="img"
-          sx={{ width: 600, display: { xs: "none", sm: "none", md: "block" } }}
-          image={fundraiser.image}
-          alt={fundraiser.imageLabel}
-        />
-        <CardContent sx={{ flex: 1 }}>
-          <Typography component="h2" variant="h5">
-            {fundraiser.title}
-          </Typography>
-          <br />
-          <ProgressBar
-            progress={
-              (fundraiser.fund_total - fundraiser.fund_remaining) /
-              fundraiser.fund_total
-            }
+    <Card>
+      <Grid container>
+        <Grid
+          item
+          xs={6}
+          sx={{ display: { xs: "none", sm: "none", md: "block" } }}
+        >
+          <CardMedia
+            component="img"
+            sx={{
+              maxHeight: "100%",
+            }}
+            image={fundraiser.image}
+            alt={fundraiser.imageLabel}
           />
-          <br />
-          <Typography variant="h4" color="text.primary">
-            USD {Math.round(fundraiser.fund_total - fundraiser.fund_remaining)}
-          </Typography>
-          <Typography variant="h5" color="text.secondary">
-            USD {Math.round(fundraiser.fund_remaining)} remaining
-          </Typography>
-          <br />
-          <Grid
-            container
-            spacing={0}
-            direction="column"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Grid item xs={3}>
-              <Button
-                variant="contained"
-                href={`/fundraisers/${fundraiser.slug}/pricing`}
-                disabled={!fundraiser.is_active}
-              >
-                Contribute to this fundraiser
-              </Button>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <CardContent sx={{ m: 3 }}>
+            <Typography component="h2" variant="h5">
+              {fundraiser.title}
+            </Typography>
+            <br />
+            <ProgressBar
+              progress={
+                (fundraiser.total_amount - fundraiser.remaining_amount) /
+                fundraiser.total_amount
+              }
+            />
+            <br />
+            <Typography variant="h4" color="text.primary">
+              ${fundraiser.total_amount - fundraiser.remaining_amount} raised
+            </Typography>
+            <Typography variant="h5" color="text.secondary">
+              ${fundraiser.remaining_amount} remaining
+            </Typography>
+            <br />
+            <Grid
+              container
+              spacing={0}
+              direction="column"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Grid item xs={3}>
+                <Button
+                  variant="contained"
+                  href={`/checkout/${fundraiser.slug}`}
+                  disabled={!fundraiser.is_active}
+                >
+                  Contribute to this fundraiser
+                </Button>
+              </Grid>
             </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-    </Grid>
+          </CardContent>
+        </Grid>
+      </Grid>
+    </Card>
   );
 }
 

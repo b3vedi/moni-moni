@@ -27,6 +27,10 @@ const authSlice = createSlice({
     userLoginFailure: (state, action) => {
       const { error } = action.payload;
       state.error = error;
+      state.isAuthenticated = false;
+      state.token = null;
+      state.user = null;
+      state.expiredAt = null;
       state.loginStatus = "rejected";
     },
     verifyUserSuccess: (state, action) => {
@@ -36,9 +40,7 @@ const authSlice = createSlice({
       state.verifyStatus = "end";
       state.loginStatus = "fulfilled";
     },
-    userLogout: (state) => {
-      state.isAuthenticated = false;
-    },
+    userLogout: (state) => {},
   },
 });
 

@@ -1,17 +1,18 @@
 from django.urls import path
-from .views import FundingChoices, PaymentSelection, PaymentSuccessful, PaymentComplete
+from .views import (
+    FundingOptionsView,
+    PaymentView,
+)
 
 app_name = "checkout"
 
 urlpatterns = [
-    path("funding_choices/", FundingChoices.as_view(), name="fundingchoices"),
-    path("payment_selection/", PaymentSelection.as_view(), name="payment_selection"),
-    path("payment_complete/", PaymentComplete.as_view(), name="payment_successful"),
-    path("payment_successful/", PaymentSuccessful.as_view(), name="payment_complete"),
-    # path("address/", , name="delivery_address"),
-    # path(
-    #     "basket_update_delivery/",
-    #     views.basket_update_delivery,
-    #     name="basket_update_delivery",
-    # ),
+    path(
+        "funding-options/<str:slug>/",
+        FundingOptionsView.as_view(),
+        name="fundingchoices_slug",
+    ),
+    path("funding-options/", FundingOptionsView.as_view(), name="fundingchoices"),
+    path("payments/<str:id>/", PaymentView.as_view(), name="payment_id"),
+    path("payments/", PaymentView.as_view(), name="payment"),
 ]

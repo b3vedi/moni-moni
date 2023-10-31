@@ -5,107 +5,69 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
+import logo from "../../assets/svg/logo.png";
+import Grid from "@mui/material/Grid";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router-dom";
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center">
-      {"Copyright © "}
-      <Link color="inherit" href="https://moni-moni.herokuapp.com">
-        Moni Moni
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
-
-const quickLink = ["Home", "About Us", "Blog Post", "Photo Gallery"]
-const getInTouch = ["Contact Us", "Our Services"]
+const quickLink = [
+  "Home",
+  // "About Us",
+  // "Contact Us",
+  "Discover",
+  "Start Fundraiser",
+];
 
 function Footer() {
+  const navigate = useNavigate();
+
   return (
     <Box component="footer" sx={{ bgcolor: "black", py: 6 }}>
-      <Container maxWidth="lg" sx={{ display: "flex", flexDirection: "row" }}>
-        <Typography
-          variant="h5"
-          align="center"
-          color="text.secondary"
-          component="p"
-          sx={{ maxWidth: "20%", color: "white", marginTop: "6%", fontWeight: "bold" }}
+      <Grid
+        container
+        justifyContent="center"
+        direction="column"
+        alignItems="center"
+      >
+        <Grid
+          container
+          alignItems="center"
+          direction="column"
+          justifyContent="center"
         >
-          10K Worldwide Client Already Connected
-        </Typography>
-
-        <List sx={{ maxWidth: "50%", display: "flex", flexDirection: "column" }} >
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white", fontWeight: "bold" }} variant="h5">Quick Link</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">Home</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">About Us</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">Blog Post</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">Photo Gallery</Typography>
-            </ListItemText>
-          </ListItem>
-        </List>
-        <List sx={{ maxWidth: "50%", display: "flex", flexDirection: "column", marginLeft: "7%" }} >
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white", fontWeight: "bold" }} variant="h5">Get In Touch</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">Contact Us</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">Our Services</Typography>
-            </ListItemText>
-          </ListItem>
-        </List>
-        <List sx={{ maxWidth: "20%", display: "flex", flexDirection: "column", marginLeft: "7%" }} >
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white", fontWeight: "bold" }} variant="h5">Address</Typography>
-            </ListItemText>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemText >
-              <Typography sx={{ color: "white" }} variant="h6">
-                2464 Royal Ln. Mesa, NewJersey 45463
-              </Typography>
-            </ListItemText>
-          </ListItem>
-        </List>
-        <TextField
-          required
-          id="filled-basic"
-          label="Required"
-          defaultValue="Hello World"
-          variant="filled"
-          color="primary"
-          sx={{color: "white"}}
-        />
-      </Container>
+          <img src={logo} alt="logo" width={"10%"} />
+        </Grid>
+        <Grid item>
+          {quickLink.map((page, key) => {
+            return (
+              <Button
+                type="text"
+                key={key}
+                onClick={() =>
+                  navigate(`/${page.toLowerCase().replaceAll(" ", "-")}`)
+                }
+                sx={{ my: 2, color: "white" }}
+              >
+                {page}
+              </Button>
+            );
+          })}
+          <Grid item>
+            <Typography variant="body2" color="white" align="center">
+              {"Copyright © "}
+              <Link
+                color="inherit"
+                href="https://github.com/amal-thundiyil/moni-moni/blob/main/LICENSE"
+              >
+                Moni Moni
+              </Link>{" "}
+              {new Date().getFullYear()}
+              {"."}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
-
 export default Footer;

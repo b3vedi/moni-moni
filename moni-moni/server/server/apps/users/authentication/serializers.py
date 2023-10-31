@@ -1,14 +1,20 @@
 from server.apps.users.models import CustomUser as User
 from rest_framework import serializers
+import jwt
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.conf import settings
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.backends import TokenBackend
+from rest_framework_simplejwt.serializers import (
+    TokenRefreshSerializer,
+    TokenVerifySerializer,
+)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -54,7 +60,7 @@ class LogoutSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         self.token = attrs["refresh"]
-        return attrs
+        return super().validate(attrs)
 
     def save(self, **kwargs):
         try:
@@ -98,12 +104,23 @@ class SetNewPasswordSerializer(serializers.Serializer):
         except Exception as e:
             raise AuthenticationFailed("The reset link is invalid", 401)
 
+
 class RefreshTokenSerializer(TokenRefreshSerializer):
     refresh = serializers.CharField(required=False)
-    access = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
-        if not self.context.get("refresh"):
-            return {"refresh": ["This field is required."]} 
-        attrs['refresh'] = self.context.get("refresh")
-        return super().validate(attrs)
+        attrs["refresh"] = self.context["refresh"]
+        try:
+            valid_data = jwt.decode(
+                attrs["refresh"],
+                algorithms=[settings.SIMPLE_JWT["ALGORITHM"]],
+                options={
+                    "verify_aud": False,
+                    "verify_signature": False,
+                },
+            )
+            user = User.objects.get(id=valid_data["user_id"])
+            res = super().validate(attrs)
+        except Exception as e:
+            raise ValidationError(e)
+        return res

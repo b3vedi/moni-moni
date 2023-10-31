@@ -5,6 +5,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.urls import reverse
 import six
+import os
 import threading
 
 
@@ -28,7 +29,6 @@ class Email(threading.Thread):
     @classmethod
     def from_user(cls, request, user):
         current_site = get_current_site(request)
-        print(current_site)
         generate_token = TokenGenerator()
         link = (
             "http://"
@@ -47,7 +47,7 @@ class Email(threading.Thread):
             email=EmailMessage(
                 email_subject,
                 email_body,
-                "noreply@semycolon.com",  # dummy email id
+                os.getenv("EMAIL_HOST_USER"),
                 [user.email],
             )
         )
@@ -58,7 +58,8 @@ class Email(threading.Thread):
         generate_token = TokenGenerator()
         current_site = get_current_site(request=request).domain
         relativeLink = reverse(
-            "password-reset-confirm", kwargs={"uidb64": uidb64, "token": generate_token.make_token(user)}
+            "password-reset-confirm",
+            kwargs={"uidb64": uidb64, "token": generate_token.make_token(user)},
         )
 
         redirect_url = request.data.get("redirect_url", "")

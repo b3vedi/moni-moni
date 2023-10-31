@@ -1,124 +1,114 @@
-import json
-from django.contrib import messages
-from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
-from server.apps.orders.models import Order, OrderItem
-from server.apps.users.models import Address
 from .models import FundingOptions
-from server.apps.catalogue.serializers import FundraiserSerializer
 from server.apps.catalogue.models import Fundraiser
-from paypalcheckoutsdk.orders import OrdersGetRequest
-from .paypal import PayPalClient
+from .models import Payment
 from rest_framework import generics, status, permissions
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from .serializers import PaymentSelectionSerializer, FundingOptionSerializer
+from .serializers import PaymentSerializer, FundingOptionSerializer
 
 
-class FundingChoices(generics.GenericAPIView):
+class FundingOptionsView(generics.GenericAPIView):
     serializer_class = FundingOptionSerializer
     permission_classes = [
         permissions.IsAuthenticated,
     ]
 
+    def get(self, request, slug, *args, **kwargs):
+        if request.GET.get("type") == "funding-option":
+            fo = FundingOptions.objects.get(id=slug)
+            serializer = self.get_serializer(fo, context={"id": request.user.id})
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        fd = get_object_or_404(Fundraiser, slug=slug, is_active=True)
+        fo = FundingOptions.objects.filter(fundraiser=fd.pk)
+        serializer = self.get_serializer(fo, many=True, context={"id": request.user.id})
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
     def put(self, request, *args, **kwargs):
-        funding_option = int(request.data["funding_option"])
-        funding_type = FundingOptions.objects.get(id=funding_option)
+        funding_option = get_object_or_404(FundingOptions, id=request.data["id"])
+        serializer = FundingOptionSerializer(
+            funding_option,
+            data=request.data,
+            partial=True,
+            context={"id": request.user.id},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Funding option updated sucessfully"}, status=status.HTTP_200_OK
+        )
 
-        session = request.session
-        if "purchase" not in request.session:
-            session["purchase"] = {
-                "funding_id": funding_type.id,
-            }
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data, context={"id": request.user.id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Funding option created successfully"},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def delete(self, request, slug, *args, **kwargs):
+        funding_option = get_object_or_404(FundingOptions, id=slug)
+        serializer = FundingOptionSerializer(
+            funding_option,
+            data={"fundraiser": funding_option.fundraiser.pk},
+            partial=True,
+            context={"id": request.user.id},
+        )
+        serializer.is_valid(raise_exception=True)
+        funding_option.delete()
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+        )
+
+
+class PaymentView(generics.GenericAPIView):
+    serializer_class = PaymentSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        if request.GET.get("type") == "deposits":
+            payment = Payment.objects.filter(user=request.user.id)
+            payment = payment[: int(request.GET.get("limit", len(payment)))]
+        elif request.GET.get("type") == "credits":
+            all_payments = Payment.objects.select_related("fundraiser").all()
+            payment = []
+            for p in all_payments:
+                if p.fundraiser.author.id == request.user.id:
+                    payment.append(p)
+            payment = payment[: int(request.GET.get("limit", len(payment)))]
         else:
-            session["purchase"]["funding_id"] = funding_type.id
-            session.modified = True
-
-        response = JsonResponse(
-            {
-                "total": updated_total_price,
-                "funding_price": funding_type.funding_price,
-            }
+            payment = Payment.objects.filter(user=request.user.id)
+        serializer = self.get_serializer(
+            payment, many=True, context={"id": request.user.id}
         )
-        return response
+        # serializer.data["fundraiser_title"] =
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    def post(request):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data, context={"id": request.user.id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        session = request.session
-        if "purchase" not in request.session:
-            messages.success(request, "Please select funding option")
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
-
-        addresses = Address.objects.filter(customer=request.user).order_by("-default")
-
-        if "address" not in request.session:
-            session["address"] = {"address_id": str(addresses[0].id)}
-        else:
-            session["address"]["address_id"] = str(addresses[0].id)
-            session.modified = True
-
-        return render(
-            request, "checkout/funding_address.html", {"addresses": addresses}
+        return Response(
+            {"message": "Payment added successfully"},
+            status=status.HTTP_201_CREATED,
         )
 
-
-class PaymentSelection(generics.GenericAPIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
-
-    def post(self, request):
-
-        session = request.session
-        if "address" not in request.session:
-            messages.success(request, "Please select address option")
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
-
-        return Response(status=status.HTTP_200_OK)
-
-
-class PaymentComplete(generics.GenericAPIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
-
-    def post(self, request):
-        PPClient = PayPalClient()
-        body = json.loads(request.body)
-        data = body["orderID"]
-        user_id = request.user.id
-        requestorder = OrdersGetRequest(data)
-        response = PPClient.client.execute(requestorder)
-        total_paid = response.result.purchase_units[0].amount.value
-        order = Order.objects.create(
-            user_id=user_id,
-            full_name=response.result.purchase_units[0].shipping.name.full_name,
-            email=response.result.payer.email_address,
-            address1=response.result.purchase_units[0].shipping.address.address_line_1,
-            address2=response.result.purchase_units[0].shipping.address.admin_area_2,
-            postal_code=response.result.purchase_units[0].shipping.address.postal_code,
-            country_code=response.result.purchase_units[
-                0
-            ].shipping.address.country_code,
-            total_paid=response.result.purchase_units[0].amount.value,
-            order_key=response.result.id,
-            payment_option="paypal",
-            billing_status=True,
+    def delete(self, request, id, *args, **kwargs):
+        p = get_object_or_404(Payment, id=id)
+        if p.user.id != request.user.id:
+            return Response(
+                {"message": "Can't delete payment of different user"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        p.delete()
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
         )
-        order_id = order.pk
-        OrderItem.objects.create(
-            order_id=order_id,
-            product=item["fundraiser"],
-            price=item["fund_total"],
-            quantity=item["qty"],
-        )
-
-        return Response(status=status.HTTP_200_OK)
-
-
-class PaymentSuccessful(generics.GenericAPIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
-
-    def get(self, request):
-        return Response(status=status.HTTP_200_OK)

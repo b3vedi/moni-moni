@@ -18,13 +18,14 @@ function FeaturedFundraiser({ fundraiser }) {
         <Card sx={{ display: "flex" }}>
           <CardContent sx={{ flex: 1 }}>
             <Typography component="h2" variant="h5">
-              {fundraiser.title}
+              {fundraiser.title.substring(0, 40)}
+              {"..."}
             </Typography>
             <Typography variant="subtitle1" color="text.secondary">
-              {fundraiser.created}
+              {new Date(fundraiser.created).toDateString()}
             </Typography>
             <Typography variant="subtitle1" paragraph>
-              {fundraiser.description}
+              {fundraiser.description.substring(0, 150)}...
             </Typography>
           </CardContent>
           <CardMedia
