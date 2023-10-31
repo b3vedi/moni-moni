@@ -22,6 +22,10 @@ class Booking(webdriver.Chrome):
     def land_first_page(self,url):
         self.get(url)
 
+    def savePage(self):
+        element = self.find_element(by=By.CSS_SELECTOR,value='li')
+        print(element)
+
     def signin(self,email,password):
         element = self.find_element(by=By.CLASS_NAME,value='css-1vm6tb0')
         element.click()

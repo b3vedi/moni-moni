@@ -1,4 +1,4 @@
-BASE_URL = "https://moni-moni.herokuapp.com/"
+BASE_URL = "https://indiabix.com/"
 
 
 ADDRESS_DETAILS= {}
